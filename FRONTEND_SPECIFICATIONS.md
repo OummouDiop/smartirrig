@@ -1380,3 +1380,7 @@ Pour toute question :
 **📅 Dernière mise à jour**: 27 février 2026
 **🔧 Version backend**: 2.0
 **📊 Nombre d'endpoints**: 25+
+
+
+
+j'ai modifier ce fichier aussi 
