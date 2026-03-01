@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Backend API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #10b981;
+            padding-bottom: 10px;
+        }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+        .error {
+            background: #fee2e2;
+            color: #7f1d1d;
+            border-left: 4px solid #ef4444;
+        }
+        .loading {
+            background: #e0f2fe;
+            color: #075985;
+            border-left: 4px solid #0ea5e9;
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #059669;
+        }
+        .data-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .endpoint {
+            background: #f0f9ff;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 3px solid #0ea5e9;
+        }
+        .endpoint code {
+            background: #e0f2fe;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Test de Connexion Backend API</h1>
+        
+        <div id="status" class="status loading">
+            ⏳ En attente de test...
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <button onclick="testBackend()">🚀 Tester la Connexion</button>
+            <button onclick="testSensorData()">📊 Récupérer Données Capteurs</button>
+            <button onclick="testValveState()">💧 État de la Valve</button>
+            <button onclick="testHistorique()">📈 Historique 24h</button>
+            <button onclick="openDashboard()">🎨 Ouvrir Dashboard React</button>
+        </div>
+        
+        <div id="result" class="data-box" style="display: none;">
+            <!-- Les résultats s'afficheront ici -->
+        </div>
+        
+        <h2>📡 Endpoints Disponibles</h2>
+        <div class="endpoint">
+            <code>GET /</code> - Health check du backend
+        </div>
+        <div class="endpoint">
+            <code>GET /history?limit=1</code> - Dernières données capteurs
+        </div>
+        <div class="endpoint">
+            <code>GET /valve-state/zone_1</code> - État de la pompe
+        </div>
+        <div class="endpoint">
+            <code>GET /historique-24h</code> - Historique des 24h
+        </div>
+        <div class="endpoint">
+            <code>GET /statistiques-eau</code> - Stats de consommation
+        </div>
+        <div class="endpoint">
+            <code>POST /toggle-valve</code> - Contrôler la pompe
+        </div>
+        
+        <h2>📚 Documentation API Complète</h2>
+        <p>
+            <a href="http://localhost:8000/docs" target="_blank" style="color: #10b981; text-decoration: none; font-weight: bold;">
+                → Ouvrir Swagger UI (http://localhost:8000/docs)
+            </a>
+        </p>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+        }
+        
+        function showResult(data) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+        
+        async function testBackend() {
+            showStatus('⏳ Test en cours...', 'loading');
+            try {
+                const response = await fetch(`${API_URL}/`);
+                const data = await response.json();
+                showStatus('✅ Backend CONNECTÉ ! Le serveur répond correctement.', 'success');
+                showResult(data);
+            } catch (error) {
+                showStatus('❌ Backend DÉCONNECTÉ ! Erreur: ' + error.message, 'error');
+                showResult({error: error.message, stack: error.stack});
+            }
+        }
+        
+        async function testSensorData() {
+            showStatus('⏳ Récupération des données capteurs...', 'loading');
+            try {
+                const response = await fetch(`${API_URL}/history?limit=1`);
+                const data = await response.json();
+                if (data.length > 0) {
+                    showStatus('✅ Données capteurs récupérées avec succès !', 'success');
+                    showResult(data[0]);
+                } else {
+                    showStatus('⚠️  Aucune donnée capteur trouvée. Démarrez la simulation !', 'error');
+                    showResult({message: 'Base de données vide. Lancez: python simulation_backend.py'});
+                }
+            } catch (error) {
+                showStatus('❌ Erreur: ' + error.message, 'error');
+                showResult({error: error.message});
+            }
+        }
+        
+        async function testValveState() {
+            showStatus('⏳ Vérification état de la valve...', 'loading');
+            try {
+                const response = await fetch(`${API_URL}/valve-state/zone_1`);
+                const data = await response.json();
+                const state = data.is_open ? 'ACTIVE 🟢' : 'INACTIVE 🔴';
+                showStatus(`✅ Pompe: ${state}`, 'success');
+                showResult(data);
+            } catch (error) {
+                showStatus('❌ Erreur: ' + error.message, 'error');
+                showResult({error: error.message});
+            }
+        }
+        
+        async function testHistorique() {
+            showStatus('⏳ Récupération historique 24h...', 'loading');
+            try {
+                const response = await fetch(`${API_URL}/historique-24h`);
+                const data = await response.json();
+                showStatus(`✅ Historique récupéré: ${data.data ? data.data.length : 0} points`, 'success');
+                showResult(data);
+            } catch (error) {
+                showStatus('❌ Erreur: ' + error.message, 'error');
+                showResult({error: error.message});
+            }
+        }
+        
+        function openDashboard() {
+            window.open('http://localhost:3000', '_blank');
+        }
+        
+        // Test automatique au chargement
+        window.addEventListener('load', () => {
+            setTimeout(testBackend, 500);
+        });
+    </script>
+</body>
+</html>
